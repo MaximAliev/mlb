@@ -2,7 +2,7 @@ from core.runner import MLBench
 
 
 def main():
-    automl_hub = MLBench(repository='zenodo')
+    automl_hub = MLBench(validation_metric='f1', test_metrics=['average_precision'])
     dataset_repo = automl_hub.repository
     dataset_repo.load_datasets()
 
