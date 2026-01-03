@@ -70,9 +70,8 @@ class AutoML(ABC):
             logger.info(model_log)
 
     def _configure_environment(self, seed=42) -> None:
-        np.random.seed(seed)
         logger.debug(f"Seed = {seed}.")
-        
+        np.random.seed(seed)
         self._seed = seed
 
     @final
@@ -192,7 +191,7 @@ class AutoGluon(AutoML):
             label=dataset.x.columns[-1],
             eval_metric=metric,
         )
-        
+
         if timeout is not None:
             timeout = float(timeout)
         predictor.fit(ag_dataset, time_limit=timeout, presets=self.preset)

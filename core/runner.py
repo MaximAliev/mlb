@@ -25,7 +25,7 @@ from utils.helpers import infer_positive_class_label, split_data_on_train_and_te
 class BAML:
     def __init__(
         self,
-        repository = 'binary_imbalanced',
+        repository = 'binary-imbalanced',
         automl = 'ag',
         validation_metric = 'f1',
         timeout = None,
@@ -118,7 +118,7 @@ class BAML:
     
     @repository.setter
     def repository(self, value: str):
-        if value == 'binary_imbalanced':
+        if value == 'binary-imbalanced':
             self._repository = BinaryImbalancedDatasetRepository()
         # elif value == 'openml':
         #     self._repository = OpenMLRepository()
@@ -126,7 +126,7 @@ class BAML:
             raise ValueError(
                 f"""
                 Invalid value of repository parameter:{value}.
-                Options available: ['binary_imbalanced'].
+                Options available: ['binary-imbalanced'].
                 """
             )
     

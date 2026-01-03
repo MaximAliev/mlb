@@ -22,12 +22,13 @@ from core.runner import BAML
 
 
 def main():
-    bench = BAML(
+    baml = BAML(
+        repository = 'binary-imbalanced',
         automl='ag',
+        preset='good',
         validation_metric='f1',
-        timeout=3600
     )
-    bench.run()
+    baml.run()
 
 
 if __name__ == '__main__':
