@@ -7,7 +7,7 @@ from imblearn.datasets import fetch_datasets
 from loguru import logger
 import itertools
 
-from data.domain import Dataset
+from data._domain import Dataset
 
 
 class DatasetRepository(ABC):
@@ -30,7 +30,7 @@ class BinaryImbalancedDatasetRepository(DatasetRepository):
     def __init__(self, verbose = False):
         super().__init__()
 
-        # TODO: parallelize.
+        # TODO: it would be better if run in a parallel.
         self._raw_datasets = fetch_datasets(data_home='datasets/imbalanced', verbose=verbose)
 
     @logger.catch

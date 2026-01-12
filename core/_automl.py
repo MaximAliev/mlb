@@ -18,7 +18,7 @@ from loguru import logger
 import jdk
 import os
 
-from data.domain import Dataset, Task
+from data._domain import Dataset, Task
 
 
 class AutoML(ABC):
@@ -280,6 +280,6 @@ class H2O(AutoML):
             raise NotFittedError()
         dataset_test = h2o.H2OFrame(x_test, column_types=self._df_dtypes[:-1])
         
-        predictions = self._fitted_model.predict(dataset_test).as_data_frame(use_multi_thread=True).iloc[:, 0].cat.codes
+        predictions = self._fitted_model.predict(dataset_test).as_data_frame(use_multi_thread=True).iloc[:, 0]
 
         return predictions

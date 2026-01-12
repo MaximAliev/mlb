@@ -16,10 +16,10 @@ from sklearn.exceptions import NotFittedError
 from loguru import logger
 from sklearn.base import BaseEstimator
 
-from core.automl import H2O, AutoML, AutoGluon
-from data.domain import Dataset, Task
+from core._automl import H2O, AutoML, AutoGluon
+from data._domain import Dataset, Task
 from data.repository import DatasetRepository, BinaryImbalancedDatasetRepository, OpenMLDatasetRepository
-from utils.helpers import infer_positive_class_of_target, train_test_split
+from core._helpers import infer_positive_class_of_target, train_test_split
 
 
 class BAML:

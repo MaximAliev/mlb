@@ -18,7 +18,7 @@ The project under active development and new frameworks, tasks, metrics and data
 
 #### Usage
 ```python
-from core.runner import BAML
+from core.api import BAML
 
 
 def main():

@@ -35,7 +35,7 @@ def train_test_split(
                 random_state=42,
                 test_size=0.2))
 
-def infer_positive_class_of_target(class_belongings: Counter) -> str:
+def infer_positive_target_class(class_belongings: Counter) -> str:
     if len(class_belongings) > 2:
         raise ValueError("Multiclass problems currently not supported =(.")
 
