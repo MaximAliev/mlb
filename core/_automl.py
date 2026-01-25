@@ -48,16 +48,55 @@ class AutoML(ABC):
         y_pred: pd.Series,
         pos_label: Optional[Union[int, str]] = None,
     ) -> None:
-        calculate_metric_score_kwargs = {
-            'y_test': y_test,
-            'y_pred': y_pred,
-            'pos_label': pos_label
-        }
-
         for metric in metrics:
-            self._calculate_metric_score(
-                metric,
-                **calculate_metric_score_kwargs)
+            if metric.startswith('f1'):
+                if metric == 'f1':
+                    average = 'binary'
+                elif metric == 'f1_weighted':
+                    average = 'weighted'
+                elif metric == 'f1_macro':
+                    average = 'macro'
+                else:
+                    raise ValueError("Invalid average for f1-measure.")
+                score = fbeta_score(y_test, y_pred, beta=1, pos_label=pos_label, average=average)
+                logger.info(f"F1{'_' + average} score: {score:.3f}")
+            elif metric == 'precision':
+                score = precision_score(y_test, y_pred, pos_label=pos_label)
+                logger.info(f"Precision score: {score:.3f}")
+            elif metric == 'recall':
+                score = recall_score(y_test, y_pred, pos_label=pos_label)
+                logger.info(f"Recall score: {score:.3f}")
+            elif metric == 'roc_auc':
+                score = roc_auc_score(y_test, y_pred)
+                logger.info(f"ROC AUC score: {score:.3f}")
+            elif metric == 'balanced_accuracy':
+                score = balanced_accuracy_score(y_test, y_pred, adjusted=True)
+                logger.info(f"Balanced accuracy score: {score:.3f}")
+            elif metric == 'average_precision':
+                score = average_precision_score(y_test, y_pred, pos_label=pos_label)
+                logger.info(f"Average precision score: {score:.3f}")
+            elif metric == 'mcc':
+                score = matthews_corrcoef(y_test, y_pred)
+                logger.info(f"MCC score: {score:.3f}")
+            elif metric == 'accuracy':
+                score = accuracy_score(y_test, y_pred)
+                logger.info(f"Balanced accuracy score: {score:.3f}")
+            else:
+                raise ValueError(
+                    f"""
+                    Invalid value encountered among values of test_metrics parameter:{metric}.
+                    Metrics available: [
+                    'f1',
+                    'f1_macro',
+                    'f1_weighted',
+                    'precision',
+                    'recall',
+                    'roc_auc',
+                    'average_precision',
+                    'balanced_accuracy',
+                    'mcc',
+                    'accuracy'].        
+                    """)
 
     # TODO: refactor.
     @final
@@ -68,62 +107,6 @@ class AutoML(ABC):
 
             model_log = pprint.pformat(f"Model: {m}", compact=True)
             logger.info(model_log)
-
-    @final
-    def _calculate_metric_score(self, metric: str, *args, **kwargs) -> None:
-        y_test = kwargs.get("y_test")
-        y_pred = kwargs.get("y_pred")
-        pos_label = kwargs.get("pos_label")
-
-        if metric.startswith('f1'):
-            if metric == 'f1':
-                average = 'binary'
-            elif metric == 'f1_weighted':
-                average = 'weighted'
-            elif metric == 'f1_macro':
-                average = 'macro'
-            else:
-                raise ValueError("Invalid average for f1-measure.")
-            score = fbeta_score(y_test, y_pred, beta=1, pos_label=pos_label, average=average)
-            
-            logger.info(f"F1{'_' + average} score: {score:.3f}")
-        elif metric == 'precision':
-            score = precision_score(y_test, y_pred, pos_label=pos_label)
-            logger.info(f"Precision score: {score:.3f}")
-        elif metric == 'recall':
-            score = recall_score(y_test, y_pred, pos_label=pos_label)
-            logger.info(f"Recall score: {score:.3f}")
-        elif metric == 'roc_auc':
-            score = roc_auc_score(y_test, y_pred)
-            logger.info(f"ROC AUC score: {score:.3f}")
-        elif metric == 'balanced_accuracy':
-            score = balanced_accuracy_score(y_test, y_pred, adjusted=True)
-            logger.info(f"Balanced accuracy score: {score:.3f}")
-        elif metric == 'average_precision':
-            score = average_precision_score(y_test, y_pred, pos_label=pos_label)
-            logger.info(f"Average precision score: {score:.3f}")
-        elif metric == 'mcc':
-            score = matthews_corrcoef(y_test, y_pred)
-            logger.info(f"MCC score: {score:.3f}")
-        elif metric == 'accuracy':
-            score = accuracy_score(y_test, y_pred)
-            logger.info(f"Balanced accuracy score: {score:.3f}")
-        else:
-            raise ValueError(
-                f"""
-                Invalid value encountered among values of test_metrics parameter:{metric}.
-                Metrics available: [
-                'f1',
-                'f1_macro',
-                'f1_weighted',
-                'precision',
-                'recall',
-                'roc_auc',
-                'average_precision',
-                'balanced_accuracy',
-                'mcc',
-                'accuracy'].        
-                """)
 
     def __str__(self):
         return self.__class__.__name__
@@ -139,35 +122,6 @@ class AutoGluon(AutoML):
         super().__init__(*args, **kwargs)
         self._preset = preset
         self._fitted_model: Optional[AutoGluonTabularPredictor] = None
-
-    @property
-    def preset(self):
-        return self._preset
-
-    @preset.setter
-    def preset(self, preset):
-        if preset not in ['medium', 'good', 'high', 'best', 'extreme']:
-            raise ValueError(
-                f"""
-                Invalid value of preset parameter: {preset}.
-                Options available: [
-                    'medium',
-                    'good',
-                    'high',
-                    'best',
-                    'extreme'
-                ].
-                """)
-        self._preset = preset
-
-    @logger.catch
-    def predict(self, x_test: pd.DataFrame) -> Union[pd.Series, np.ndarray]:
-        if self._fitted_model is None:
-            raise NotFittedError()
-        dataset_test = AutoGluonTabularDataset(x_test)
-        predictions = self._fitted_model.predict(dataset_test).astype(int)
-
-        return predictions
 
     @logger.catch
     def fit(
@@ -215,6 +169,36 @@ class AutoGluon(AutoML):
         predictor.delete_models(models_to_keep=best_model, dry_run=False)
 
         self._fitted_model = predictor
+    
+    @logger.catch
+    def predict(self, x_test: pd.DataFrame) -> Union[pd.Series, np.ndarray]:
+        if self._fitted_model is None:
+            raise NotFittedError()
+        dataset_test = AutoGluonTabularDataset(x_test)
+        predictions = self._fitted_model.predict(dataset_test).astype(int)
+
+        return predictions
+
+    @property
+    def preset(self):
+        return self._preset
+
+    @preset.setter
+    def preset(self, preset):
+        if preset not in ['medium', 'good', 'high', 'best', 'extreme']:
+            raise ValueError(
+                f"""
+                Invalid value of preset parameter: {preset}.
+                Options available: [
+                    'medium',
+                    'good',
+                    'high',
+                    'best',
+                    'extreme'
+                ].
+                """)
+        self._preset = preset
+
 
 class H2O(AutoML):
     def __init__(
@@ -225,6 +209,7 @@ class H2O(AutoML):
         super().__init__(*args, **kwargs)
         self._fitted_model = None
 
+        # Datasphere specific logic.
         if os.path.exists('/job/'):
             jdk.install('17')
             os.environ['JAVA_HOME'] = '/job/.jdk/jdk-17.0.17+10'
